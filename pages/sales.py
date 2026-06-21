@@ -162,7 +162,11 @@ class Sales(ctk.CTkFrame):
 
 
 
-            text = f"{product[1]} | ${product[2]} | Stock:{product[3]}"
+            text = (
+                f"{product[1]} | "
+                f"Price: ${product[2]} | "
+                f"Available: {product[3]}"
+            )
 
 
             ctk.CTkLabel(
@@ -193,23 +197,45 @@ class Sales(ctk.CTkFrame):
 
     def add_cart(self, product):
 
+        product_id = product[0]
+
+        available_stock = product[3]
+
+
+        # Check if already in cart
         for item in self.cart:
 
-            if item["id"] == product[0]:
+            if item["id"] == product_id:
+
+
+                if item["qty"] >= available_stock:
+
+                    messagebox.showwarning(
+                        "Stock Limit",
+                        f"Only {available_stock} items available"
+                    )
+
+                    return
+
+
 
                 item["qty"] += 1
 
                 self.refresh_cart()
+
                 return
 
 
+
+        # Add new item
 
         self.cart.append({
 
             "id": product[0],
             "name": product[1],
             "price": product[2],
-            "qty": 1
+            "qty": 1,
+            "stock": product[3]
 
         })
 
@@ -222,16 +248,15 @@ class Sales(ctk.CTkFrame):
 
     def refresh_cart(self):
 
+        # clear cart display
         for widget in self.cart_frame.winfo_children():
             widget.destroy()
-
 
 
         total = 0
 
 
-
-        for item in self.cart:
+        for index, item in enumerate(self.cart):
 
 
             amount = item["price"] * item["qty"]
@@ -251,12 +276,78 @@ class Sales(ctk.CTkFrame):
 
 
 
-            ctk.CTkLabel(
+            # PRODUCT NAME
+
+            name = ctk.CTkLabel(
                 row,
-                text=f"{item['name']}  x {item['qty']}  ${amount}"
-            ).pack(
+                text=item["name"],
+                width=180
+            )
+
+            name.pack(
                 side="left",
                 padx=10
+            )
+
+
+
+            # MINUS BUTTON
+
+            minus = ctk.CTkButton(
+                row,
+                text="-",
+                width=40,
+                command=lambda i=index:self.decrease_quantity(i)
+            )
+
+            minus.pack(
+                side="left"
+            )
+
+
+
+            # QUANTITY
+
+            qty = ctk.CTkLabel(
+                row,
+                text=str(item["qty"]),
+                width=50,
+                font=("Arial",16,"bold")
+            )
+
+            qty.pack(
+                side="left"
+            )
+
+
+
+            # PLUS BUTTON
+
+            plus = ctk.CTkButton(
+                row,
+                text="+",
+                width=40,
+                command=lambda i=index:self.increase_quantity(i)
+            )
+
+
+            plus.pack(
+                side="left"
+            )
+
+
+
+            # PRICE
+
+            price = ctk.CTkLabel(
+                row,
+                text=f"${amount}",
+                width=100
+            )
+
+            price.pack(
+                side="right",
+                padx=20
             )
 
 
@@ -267,7 +358,53 @@ class Sales(ctk.CTkFrame):
 
 
 
+    def increase_quantity(self,index):
+
+        item = self.cart[index]
+
+
+        # STOCK CHECK
+
+        if item["qty"] >= item["stock"]:
+
+
+            messagebox.showwarning(
+                "Stock Limit",
+                f"Only {item['stock']} units available"
+            )
+
+            return
+
+
+
+        item["qty"] += 1
+
+
+        self.refresh_cart()
     
+
+    def decrease_quantity(self,index):
+
+        item = self.cart[index]
+
+
+        item["qty"] -= 1
+
+
+
+        # remove item if quantity becomes zero
+
+        if item["qty"] <= 0:
+
+            self.cart.pop(index)
+
+
+
+        self.refresh_cart()
+
+
+
+
     def checkout(self):
 
         if not self.cart:
@@ -281,42 +418,27 @@ class Sales(ctk.CTkFrame):
 
 
 
-        total = sum(
-            item["price"] * item["qty"]
-            for item in self.cart
-        )
+        # FINAL STOCK VALIDATION
 
-
-
-        sale_id = self.db.create_sale(
-            self.customer.get(),
-            total,
-            Session.current_user["id"]
-        )
-
+        products = self.db.get_products()
 
 
         for item in self.cart:
 
-            self.db.add_sale_item(
-
-                sale_id,
-
-                item["id"],
-
-                item["qty"],
-
-                item["price"]
-
-            )
+            for product in products:
 
 
+                if product[0] == item["id"]:
 
-        messagebox.showinfo(
-            "Success",
-            "Sale completed"
-        )
 
+                    if item["qty"] > product[6]:
+
+                        messagebox.showerror(
+                            "Stock Error",
+                            f"{item['name']} does not have enough stock"
+                        )
+
+                        return
 
 
         self.cart.clear()
