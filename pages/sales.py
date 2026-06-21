@@ -131,3 +131,58 @@ class Sales(ctk.CTkFrame):
         checkout.pack(
             pady=10
         )
+
+
+    
+
+    def search_product(self):
+
+        for widget in self.product_list.winfo_children():
+            widget.destroy()
+
+
+
+        products = self.db.search_products(
+            self.search.get()
+        )
+
+
+
+        for product in products:
+
+
+            row = ctk.CTkFrame(
+                self.product_list
+            )
+
+            row.pack(
+                fill="x",
+                pady=5
+            )
+
+
+
+            text = f"{product[1]} | ${product[2]} | Stock:{product[3]}"
+
+
+            ctk.CTkLabel(
+                row,
+                text=text
+            ).pack(
+                side="left",
+                padx=10
+            )
+
+
+
+            btn = ctk.CTkButton(
+                row,
+                text="Add",
+                width=80,
+                command=lambda p=product:self.add_cart(p)
+            )
+
+
+            btn.pack(
+                side="right"
+            )
