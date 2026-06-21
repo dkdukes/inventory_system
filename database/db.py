@@ -15,23 +15,19 @@ class Database:
 
     def create_tables(self):
 
-        # USERS TABLE
-        self.cursor.execute("""
+        self.cursor.executescript("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 full_name TEXT,
                 phone_number TEXT,
                 email TEXT UNIQUE,
                 password TEXT,
-                role TEXT,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
+                role TEXT
+            );
 
 
-        # PRODUCTS TABLE
-        self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS products (
+
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 category TEXT,
@@ -42,12 +38,57 @@ class Database:
                 serial_number TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 user_id INTEGER,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            )
+
+                FOREIGN KEY(user_id)
+                REFERENCES users(id)
+            );
+
+
+
+            CREATE TABLE IF NOT EXISTS sales (
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                customer TEXT,
+
+                total_amount REAL,
+
+                sale_date TEXT DEFAULT CURRENT_TIMESTAMP,
+
+                user_id INTEGER,
+
+                FOREIGN KEY(user_id)
+                REFERENCES users(id)
+            );
+
+
+
+            CREATE TABLE IF NOT EXISTS sale_items (
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                sale_id INTEGER,
+
+                product_id INTEGER,
+
+                quantity INTEGER,
+
+                price REAL,
+
+
+                FOREIGN KEY(sale_id)
+                REFERENCES sales(id),
+
+
+                FOREIGN KEY(product_id)
+                REFERENCES products(id)
+
+            );
+
         """)
 
-        self.conn.commit()
 
+        self.conn.commit()
 
 
     # ---------------- PRODUCTS ----------------
