@@ -14,6 +14,8 @@ class Dashboard(ctk.CTkFrame):
 
 
 
+    # ---------------- UI ----------------
+
     def create_widgets(self):
 
         title = ctk.CTkLabel(
@@ -31,6 +33,22 @@ class Dashboard(ctk.CTkFrame):
 
 
 
+    # ---------------- HELPERS ----------------
+
+    def map_product(self, p):
+
+        return {
+            "id": p[0],
+            "name": p[1],
+            "category": p[2],
+            "supplier": p[3],
+            "buy_price": p[4],
+            "sell_price": p[5],
+            "quantity": p[6]
+        }
+
+
+
     # ---------------- CARDS ----------------
 
     def create_cards(self):
@@ -40,22 +58,27 @@ class Dashboard(ctk.CTkFrame):
 
 
 
-        # GET REAL DATA
         products = self.db.get_products()
-
-        total_products = len(products)
-
-
-
-        total_value = sum(
-            p[6] * p[5] for p in products
-        )  # quantity * sell_price
+        mapped = [self.map_product(p) for p in products]
 
 
 
-        low_stock = len(
-            [p for p in products if p[6] <= 5]
+        # METRICS
+
+        total_products = len(mapped)
+
+        total_units = sum(p["quantity"] for p in mapped)
+
+        inventory_value = sum(
+            p["quantity"] * p["sell_price"]
+            for p in mapped
         )
+
+        low_stock = len([
+            p for p in mapped if p["quantity"] <= 5
+        ])
+
+        total_sales = self.db.get_total_sales()
 
 
 
@@ -63,11 +86,11 @@ class Dashboard(ctk.CTkFrame):
 
             ("Total Products", total_products),
 
-            ("Low Stock Items", low_stock),
+            ("Total Units", total_units),
 
-            ("Inventory Value", f"${total_value:,.2f}"),
+            ("Inventory Value", f"${inventory_value:,.2f}"),
 
-            ("Total SKUs", len(products))
+            ("Total Sales", f"${total_sales:,.2f}")
 
         ]
 
@@ -75,18 +98,9 @@ class Dashboard(ctk.CTkFrame):
 
         for title, value in cards:
 
-            card = ctk.CTkFrame(
-                card_frame,
-                width=200,
-                height=120
-            )
+            card = ctk.CTkFrame(card_frame, width=200, height=120)
 
-            card.pack(
-                side="left",
-                expand=True,
-                fill="both",
-                padx=10
-            )
+            card.pack(side="left", expand=True, fill="both", padx=10)
 
 
 
@@ -115,8 +129,10 @@ class Dashboard(ctk.CTkFrame):
 
 
 
-        # SALES PANEL (placeholder for now)
+        # SALES PANEL (future charts area)
+
         sales = ctk.CTkFrame(bottom)
+
         sales.pack(side="left", expand=True, fill="both", padx=10)
 
 
@@ -131,7 +147,7 @@ class Dashboard(ctk.CTkFrame):
 
         ctk.CTkLabel(
             sales,
-            text="(Connect Sales module next)",
+            text="Charts coming soon 📊"
         ).pack()
 
 
@@ -139,6 +155,7 @@ class Dashboard(ctk.CTkFrame):
         # LOW STOCK PANEL
 
         stock = ctk.CTkFrame(bottom)
+
         stock.pack(side="right", expand=True, fill="both", padx=10)
 
 
@@ -152,9 +169,12 @@ class Dashboard(ctk.CTkFrame):
 
 
         products = self.db.get_products()
+        mapped = [self.map_product(p) for p in products]
+
+
 
         low_stock_items = [
-            p for p in products if p[6] <= 5
+            p for p in mapped if p["quantity"] <= 5
         ]
 
 
@@ -172,5 +192,5 @@ class Dashboard(ctk.CTkFrame):
 
                 ctk.CTkLabel(
                     stock,
-                    text=f"{p[1]} - {p[6]} left"
+                    text=f"{p['name']} - {p['quantity']} left"
                 ).pack(pady=5)
