@@ -215,3 +215,52 @@ class Sales(ctk.CTkFrame):
 
 
         self.refresh_cart()
+
+
+
+    
+
+    def refresh_cart(self):
+
+        for widget in self.cart_frame.winfo_children():
+            widget.destroy()
+
+
+
+        total = 0
+
+
+
+        for item in self.cart:
+
+
+            amount = item["price"] * item["qty"]
+
+            total += amount
+
+
+
+            row = ctk.CTkFrame(
+                self.cart_frame
+            )
+
+            row.pack(
+                fill="x",
+                pady=5
+            )
+
+
+
+            ctk.CTkLabel(
+                row,
+                text=f"{item['name']}  x {item['qty']}  ${amount}"
+            ).pack(
+                side="left",
+                padx=10
+            )
+
+
+
+        self.total_label.configure(
+            text=f"Total: ${total}"
+        )
