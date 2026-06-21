@@ -5,6 +5,7 @@ from pages.dashboard import Dashboard
 from pages.products import Products
 from auth.signup import Signup
 from auth.session import Session
+from pages.sales import Sales
 
 
 class InventoryApp(ctk.CTk):
@@ -27,7 +28,8 @@ class InventoryApp(ctk.CTk):
 
         self.pages = {
             "Dashboard": Dashboard,
-            "Products": Products
+            "Products": Products,
+            "Sales" : Sales
         }
 
         self.show_login()
