@@ -238,3 +238,19 @@ class Database:
 
 
         self.conn.commit()
+    
+
+
+    # ENABLE SEARCH OF PRODUCTS
+
+    def search_products(self, keyword):
+
+        self.cursor.execute("""
+            SELECT id, name, sell_price, quantity
+            FROM products
+            WHERE name LIKE ?
+        """, (
+            f"%{keyword}%",
+        ))
+
+        return self.cursor.fetchall()
