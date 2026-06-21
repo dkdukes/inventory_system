@@ -159,3 +159,82 @@ class Database:
         """, (product_id,))
 
         self.conn.commit()
+
+    
+
+
+ # ---------------- SALES ----------------
+
+
+
+    def create_sale(
+            self,
+            customer,
+            total_amount,
+            user_id
+    ):
+
+        self.cursor.execute("""
+            INSERT INTO sales
+            (customer,total_amount,user_id)
+
+            VALUES (?,?,?)
+
+        """,
+        (
+            customer,
+            total_amount,
+            user_id
+        ))
+
+
+        self.conn.commit()
+
+
+        return self.cursor.lastrowid
+    
+
+
+    def add_sale_item(
+            self,
+            sale_id,
+            product_id,
+            quantity,
+            price
+    ):
+
+        self.cursor.execute("""
+            INSERT INTO sale_items
+            (
+                sale_id,
+                product_id,
+                quantity,
+                price
+            )
+
+            VALUES (?,?,?,?)
+
+        """,
+        (
+            sale_id,
+            product_id,
+            quantity,
+            price
+        ))
+
+
+        self.cursor.execute("""
+            UPDATE products
+
+            SET quantity = quantity - ?
+
+            WHERE id=?
+
+        """,
+        (
+            quantity,
+            product_id
+        ))
+
+
+        self.conn.commit()
