@@ -33,13 +33,21 @@ class Sales(ctk.CTkFrame):
 
         # CUSTOMER
 
+        customer_frame = ctk.CTkFrame(self)
+        customer_frame.pack(pady=10)
+
+        ctk.CTkLabel(
+            customer_frame,
+            text="Customer Name"
+        ).pack(side="left", padx=10)
+
         self.customer = ctk.CTkEntry(
-            self,
-            placeholder_text="Customer Name",
-            width=300
+            customer_frame,
+            width=300,
+            placeholder_text="Optional"
         )
 
-        self.customer.pack(pady=10)
+        self.customer.pack(side="left")
 
 
 
@@ -133,8 +141,25 @@ class Sales(ctk.CTkFrame):
         )
 
 
-    
 
+        clear_btn = ctk.CTkButton(
+                self,
+                text="Clear Cart",
+                fg_color="gray",
+                command=self.clear_cart
+        )
+
+        clear_btn.pack(pady=5)
+
+
+    
+    def clear_cart(self):
+
+        self.cart.clear()
+
+        self.refresh_cart()
+    
+    
     def search_product(self):
 
         for widget in self.product_list.winfo_children():
@@ -275,6 +300,17 @@ class Sales(ctk.CTkFrame):
             )
 
 
+            remove_btn = ctk.CTkButton(
+                row,
+                text="Remove",
+                fg_color="red",
+                width=80,
+                command=lambda i=index: self.remove_item(i)
+            )
+
+            remove_btn.pack(side="right", padx=10)
+
+
 
             # PRODUCT NAME
 
@@ -355,6 +391,16 @@ class Sales(ctk.CTkFrame):
         self.total_label.configure(
             text=f"Total: ${total}"
         )
+
+
+
+
+
+    def remove_item(self, index):
+
+        self.cart.pop(index)
+
+        self.refresh_cart()
 
 
 
