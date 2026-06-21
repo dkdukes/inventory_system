@@ -5,15 +5,15 @@ from auth.session import Session
 from tkinter import messagebox
 
 
-
 class Sales(ctk.CTkFrame):
 
-
-    def __init__(self,parent):
+    def __init__(self, parent):
 
         super().__init__(parent)
 
         self.db = Database()
+
+        self.cart = []
 
         self.create_ui()
 
@@ -21,10 +21,9 @@ class Sales(ctk.CTkFrame):
 
     def create_ui(self):
 
-
         title = ctk.CTkLabel(
             self,
-            text="Sales / POS",
+            text="Point Of Sale",
             font=("Arial",30,"bold")
         )
 
@@ -32,171 +31,103 @@ class Sales(ctk.CTkFrame):
 
 
 
-        form = ctk.CTkFrame(self)
-
-        form.pack(pady=20)
-
-
+        # CUSTOMER
 
         self.customer = ctk.CTkEntry(
-            form,
+            self,
             placeholder_text="Customer Name",
-            width=250
+            width=300
         )
 
-        self.customer.grid(
-            row=0,
-            column=0,
+        self.customer.pack(pady=10)
+
+
+
+        # PRODUCT SEARCH
+
+        search_frame = ctk.CTkFrame(self)
+        search_frame.pack(fill="x", padx=20)
+
+
+
+        self.search = ctk.CTkEntry(
+            search_frame,
+            placeholder_text="Search product..."
+        )
+
+        self.search.pack(
+            side="left",
             padx=10
         )
 
 
-
-        self.product = ctk.CTkEntry(
-            form,
-            placeholder_text="Product ID",
-            width=150
+        search_btn = ctk.CTkButton(
+            search_frame,
+            text="Search",
+            command=self.search_product
         )
 
-
-        self.product.grid(
-            row=0,
-            column=1,
-            padx=10
+        search_btn.pack(
+            side="left"
         )
 
 
 
-        self.quantity = ctk.CTkEntry(
-            form,
-            placeholder_text="Quantity",
-            width=150
+        # PRODUCT LIST
+
+        self.product_list = ctk.CTkScrollableFrame(
+            self,
+            height=150
+        )
+
+        self.product_list.pack(
+            fill="x",
+            padx=20,
+            pady=10
         )
 
 
-        self.quantity.grid(
-            row=0,
-            column=2,
-            padx=10
+
+        # CART
+
+        ctk.CTkLabel(
+            self,
+            text="Cart",
+            font=("Arial",20,"bold")
+        ).pack()
+
+
+
+        self.cart_frame = ctk.CTkScrollableFrame(
+            self
+        )
+
+        self.cart_frame.pack(
+            expand=True,
+            fill="both",
+            padx=20
         )
 
 
 
-        button = ctk.CTkButton(
-            form,
+        self.total_label = ctk.CTkLabel(
+            self,
+            text="Total: $0",
+            font=("Arial",22,"bold")
+        )
+
+        self.total_label.pack(
+            pady=10
+        )
+
+
+
+        checkout = ctk.CTkButton(
+            self,
             text="Complete Sale",
-            command=self.make_sale
+            command=self.checkout
         )
 
-
-        button.grid(
-            row=0,
-            column=3,
-            padx=10
+        checkout.pack(
+            pady=10
         )
-    
-    
-    def make_sale(self):
-
-
-        try:
-
-            customer = self.customer.get()
-
-            product_id = int(
-                self.product.get()
-            )
-
-            qty = int(
-                self.quantity.get()
-            )
-
-
-            products = self.db.get_products()
-
-
-            product = None
-
-
-            for p in products:
-
-                if p[0] == product_id:
-                    product = p
-                    break
-
-
-
-            if not product:
-
-                messagebox.showerror(
-                    "Error",
-                    "Product not found"
-                )
-
-                return
-
-
-
-            if product[6] < qty:
-
-                messagebox.showerror(
-                    "Error",
-                    "Insufficient stock"
-                )
-
-                return
-
-
-
-            price = product[5]
-
-            total = price * qty
-
-
-
-            user_id = Session.current_user["id"]
-
-
-
-            sale_id = self.db.create_sale(
-                customer,
-                total,
-                user_id
-            )
-
-
-
-            self.db.add_sale_item(
-                sale_id,
-                product_id,
-                qty,
-                price
-            )
-
-
-
-            messagebox.showinfo(
-                "Success",
-                "Sale completed successfully"
-            )
-
-
-            self.clear()
-
-
-
-        except Exception as e:
-
-            messagebox.showerror(
-                "Error",
-                str(e)
-            )
-
-
-
-
-    def clear(self):
-
-        self.customer.delete(0,"end")
-        self.product.delete(0,"end")
-        self.quantity.delete(0,"end")
