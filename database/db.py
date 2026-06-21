@@ -254,3 +254,59 @@ class Database:
         ))
 
         return self.cursor.fetchall()
+    
+
+
+    def get_total_sales(self):
+
+        self.cursor.execute("""
+            SELECT SUM(total_amount) FROM sales
+        """)
+
+        result = self.cursor.fetchone()[0]
+
+        return result or 0
+    
+
+    def get_today_sales(self):
+
+        self.cursor.execute("""
+            SELECT SUM(total_amount)
+            FROM sales
+            WHERE date(sale_date) = date('now')
+        """)
+
+        result = self.cursor.fetchone()[0]
+
+        return result or 0
+    
+
+    def get_total_products(self):
+
+        self.cursor.execute("""
+            SELECT COUNT(*) FROM products
+        """)
+
+        return self.cursor.fetchone()[0]
+    
+
+    def get_low_stock(self, limit=5):
+
+        self.cursor.execute("""
+            SELECT name, quantity
+            FROM products
+            WHERE quantity <= 5
+            ORDER BY quantity ASC
+            LIMIT ?
+        """, (limit,))
+
+        return self.cursor.fetchall()
+    
+    def get_total_customers(self):
+
+        self.cursor.execute("""
+            SELECT COUNT(DISTINCT customer)
+            FROM sales
+        """)
+
+        return self.cursor.fetchone()[0]
