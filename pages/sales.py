@@ -186,3 +186,32 @@ class Sales(ctk.CTkFrame):
             btn.pack(
                 side="right"
             )
+
+    
+
+
+
+    def add_cart(self, product):
+
+        for item in self.cart:
+
+            if item["id"] == product[0]:
+
+                item["qty"] += 1
+
+                self.refresh_cart()
+                return
+
+
+
+        self.cart.append({
+
+            "id": product[0],
+            "name": product[1],
+            "price": product[2],
+            "qty": 1
+
+        })
+
+
+        self.refresh_cart()
