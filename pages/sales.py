@@ -3,6 +3,10 @@ import customtkinter as ctk
 from database.db import Database
 from auth.session import Session
 from tkinter import messagebox
+import os
+from datetime import datetime
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 
 class Sales(ctk.CTkFrame):
@@ -464,18 +468,17 @@ class Sales(ctk.CTkFrame):
 
 
 
-        # FINAL STOCK VALIDATION
+        # ---------------- STOCK VALIDATION ----------------
 
         products = self.db.get_products()
+
 
 
         for item in self.cart:
 
             for product in products:
 
-
                 if product[0] == item["id"]:
-
 
                     if item["qty"] > product[6]:
 
@@ -487,6 +490,111 @@ class Sales(ctk.CTkFrame):
                         return
 
 
-        self.cart.clear()
 
+            # ---------------- CALCULATE TOTAL ----------------
+
+        total = sum(
+            item["qty"] * item["price"]
+            for item in self.cart
+        )
+
+
+
+        # ---------------- CREATE SALE ----------------
+
+        sale_id = self.db.create_sale(
+
+            self.customer.get(),
+
+            total,
+
+            Session.current_user["id"]
+
+        )
+
+
+
+        # ---------------- SAVE ITEMS + REDUCE STOCK ----------------
+
+        for item in self.cart:
+
+            self.db.add_sale_item(
+
+                sale_id,
+                item["id"],
+                item["qty"],
+                item["price"]
+
+            )
+
+
+
+        # ---------------- GENERATE RECEIPT ----------------
+
+        self.generate_receipt(sale_id, total)
+
+
+
+        # ---------------- CLEAN UP ----------------
+
+        messagebox.showinfo(
+            "Success",
+            "Sale completed successfully"
+        )
+
+
+
+        self.cart.clear()
         self.refresh_cart()
+
+        self.customer.delete(0, "end")
+
+        
+
+
+
+
+    def generate_receipt(self, sale_id, total):
+
+        if not os.path.exists("receipts"):
+            os.makedirs("receipts")
+
+
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+        filename = f"receipts/receipt_{sale_id}.pdf"
+
+        c = canvas.Canvas(filename, pagesize=A4)
+
+
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(200, 800, "INVENTORY PRO - RECEIPT")
+
+
+        c.setFont("Helvetica", 12)
+        c.drawString(50, 770, f"Sale ID: {sale_id}")
+        c.drawString(50, 750, f"Customer: {self.customer.get()}")
+        c.drawString(50, 730, f"Date: {date}")
+        c.drawString(50, 710, f"Cashier: {__import__('auth.session').session.Session.current_user['name']}")
+
+
+        y = 670
+
+        c.drawString(50, y, "Items:")
+        y -= 20
+
+
+        for item in self.cart:
+
+            line = f"{item['name']} x {item['qty']}  = ${item['qty'] * item['price']}"
+
+            c.drawString(70, y, line)
+
+            y -= 20
+
+
+        c.drawString(50, y-20, f"TOTAL: ${total}")
+
+
+        c.save()
