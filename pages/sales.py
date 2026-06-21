@@ -264,3 +264,61 @@ class Sales(ctk.CTkFrame):
         self.total_label.configure(
             text=f"Total: ${total}"
         )
+
+
+
+    
+    def checkout(self):
+
+        if not self.cart:
+
+            messagebox.showerror(
+                "Error",
+                "Cart is empty"
+            )
+
+            return
+
+
+
+        total = sum(
+            item["price"] * item["qty"]
+            for item in self.cart
+        )
+
+
+
+        sale_id = self.db.create_sale(
+            self.customer.get(),
+            total,
+            Session.current_user["id"]
+        )
+
+
+
+        for item in self.cart:
+
+            self.db.add_sale_item(
+
+                sale_id,
+
+                item["id"],
+
+                item["qty"],
+
+                item["price"]
+
+            )
+
+
+
+        messagebox.showinfo(
+            "Success",
+            "Sale completed"
+        )
+
+
+
+        self.cart.clear()
+
+        self.refresh_cart()
