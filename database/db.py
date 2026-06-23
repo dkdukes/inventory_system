@@ -13,6 +13,40 @@ class Database:
 
 
 
+    
+    def execute(self, query, params=()):
+
+        self.cursor.execute(
+            query,
+            params
+        )
+
+        self.conn.commit()
+
+
+
+    def fetch_all(self, query, params=()):
+
+        self.cursor.execute(
+            query,
+            params
+        )
+
+        return self.cursor.fetchall()
+
+
+
+    def fetch_one(self, query, params=()):
+
+        self.cursor.execute(
+            query,
+            params
+        )
+
+        return self.cursor.fetchone()
+
+
+
     def create_tables(self):
 
         self.cursor.executescript("""
@@ -82,6 +116,35 @@ class Database:
 
                 FOREIGN KEY(product_id)
                 REFERENCES products(id)
+
+            );
+                                  
+            CREATE TABLE IF NOT EXISTS categories(
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                name TEXT NOT NULL UNIQUE,
+
+                description TEXT,
+
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+            );
+                                  
+
+            CREATE TABLE IF NOT EXISTS suppliers(
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                name TEXT NOT NULL,
+
+                phone TEXT,
+
+                email TEXT,
+
+                address TEXT,
+
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
             );
 
