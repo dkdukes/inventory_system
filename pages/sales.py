@@ -1,12 +1,15 @@
 import customtkinter as ctk
 
-from database.db import Database
+from database.product_db import ProductDB
 from auth.session import Session
 from tkinter import messagebox
+
 import os
 from datetime import datetime
+
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+
 
 
 class Sales(ctk.CTkFrame):
@@ -15,13 +18,15 @@ class Sales(ctk.CTkFrame):
 
         super().__init__(parent)
 
-        self.db = Database()
+        self.db = ProductDB()
 
         self.cart = []
 
         self.create_ui()
 
 
+
+    # ================= UI =================
 
     def create_ui(self):
 
@@ -35,15 +40,16 @@ class Sales(ctk.CTkFrame):
 
 
 
-        # CUSTOMER
-
         customer_frame = ctk.CTkFrame(self)
         customer_frame.pack(pady=10)
+
 
         ctk.CTkLabel(
             customer_frame,
             text="Customer Name"
         ).pack(side="left", padx=10)
+
+
 
         self.customer = ctk.CTkEntry(
             customer_frame,
@@ -55,11 +61,14 @@ class Sales(ctk.CTkFrame):
 
 
 
-        # PRODUCT SEARCH
+        # SEARCH
 
         search_frame = ctk.CTkFrame(self)
-        search_frame.pack(fill="x", padx=20)
 
+        search_frame.pack(
+            fill="x",
+            padx=20
+        )
 
 
         self.search = ctk.CTkEntry(
@@ -73,19 +82,18 @@ class Sales(ctk.CTkFrame):
         )
 
 
-        search_btn = ctk.CTkButton(
+
+        ctk.CTkButton(
             search_frame,
             text="Search",
             command=self.search_product
-        )
-
-        search_btn.pack(
+        ).pack(
             side="left"
         )
 
 
 
-        # PRODUCT LIST
+        # PRODUCTS
 
         self.product_list = ctk.CTkScrollableFrame(
             self,
@@ -100,8 +108,6 @@ class Sales(ctk.CTkFrame):
 
 
 
-        # CART
-
         ctk.CTkLabel(
             self,
             text="Cart",
@@ -110,9 +116,7 @@ class Sales(ctk.CTkFrame):
 
 
 
-        self.cart_frame = ctk.CTkScrollableFrame(
-            self
-        )
+        self.cart_frame = ctk.CTkScrollableFrame(self)
 
         self.cart_frame.pack(
             expand=True,
@@ -128,45 +132,33 @@ class Sales(ctk.CTkFrame):
             font=("Arial",22,"bold")
         )
 
-        self.total_label.pack(
-            pady=10
-        )
+        self.total_label.pack(pady=10)
 
 
 
-        checkout = ctk.CTkButton(
+        ctk.CTkButton(
             self,
             text="Complete Sale",
             command=self.checkout
-        )
-
-        checkout.pack(
-            pady=10
-        )
+        ).pack(pady=5)
 
 
 
-        clear_btn = ctk.CTkButton(
-                self,
-                text="Clear Cart",
-                fg_color="gray",
-                command=self.clear_cart
-        )
-
-        clear_btn.pack(pady=5)
+        ctk.CTkButton(
+            self,
+            text="Clear Cart",
+            fg_color="gray",
+            command=self.clear_cart
+        ).pack(pady=5)
 
 
-    
-    def clear_cart(self):
 
-        self.cart.clear()
+    # ================= SEARCH =================
 
-        self.refresh_cart()
-    
-    
     def search_product(self):
 
         for widget in self.product_list.winfo_children():
+
             widget.destroy()
 
 
@@ -192,10 +184,11 @@ class Sales(ctk.CTkFrame):
 
 
             text = (
-                f"{product[1]} | "
-                f"Price: ${product[2]} | "
-                f"Available: {product[3]}"
+                f"{product['name']} | "
+                f"Price: {product['sell_price']} | "
+                f"Stock: {product['quantity']}"
             )
+
 
 
             ctk.CTkLabel(
@@ -208,40 +201,32 @@ class Sales(ctk.CTkFrame):
 
 
 
-            btn = ctk.CTkButton(
+            ctk.CTkButton(
                 row,
                 text="Add",
                 width=80,
                 command=lambda p=product:self.add_cart(p)
-            )
-
-
-            btn.pack(
+            ).pack(
                 side="right"
             )
 
-    
 
 
+    # ================= CART =================
 
     def add_cart(self, product):
 
-        product_id = product[0]
-
-        available_stock = product[3]
-
-
-        # Check if already in cart
         for item in self.cart:
 
-            if item["id"] == product_id:
+
+            if item["id"] == product["id"]:
 
 
-                if item["qty"] >= available_stock:
+                if item["qty"] >= product["quantity"]:
 
                     messagebox.showwarning(
                         "Stock Limit",
-                        f"Only {available_stock} items available"
+                        "No more stock available"
                     )
 
                     return
@@ -256,15 +241,18 @@ class Sales(ctk.CTkFrame):
 
 
 
-        # Add new item
 
         self.cart.append({
 
-            "id": product[0],
-            "name": product[1],
-            "price": product[2],
+            "id": product["id"],
+
+            "name": product["name"],
+
+            "price": product["sell_price"],
+
             "qty": 1,
-            "stock": product[3]
+
+            "stock": product["quantity"]
 
         })
 
@@ -273,22 +261,23 @@ class Sales(ctk.CTkFrame):
 
 
 
-    
-
     def refresh_cart(self):
 
-        # clear cart display
+
         for widget in self.cart_frame.winfo_children():
+
             widget.destroy()
+
 
 
         total = 0
 
 
-        for index, item in enumerate(self.cart):
+
+        for index,item in enumerate(self.cart):
 
 
-            amount = item["price"] * item["qty"]
+            amount = item["qty"] * item["price"]
 
             total += amount
 
@@ -304,90 +293,65 @@ class Sales(ctk.CTkFrame):
             )
 
 
-            remove_btn = ctk.CTkButton(
+
+            ctk.CTkLabel(
                 row,
-                text="Remove",
-                fg_color="red",
-                width=80,
-                command=lambda i=index: self.remove_item(i)
-            )
-
-            remove_btn.pack(side="right", padx=10)
-
-
-
-            # PRODUCT NAME
-
-            name = ctk.CTkLabel(
-                row,
-                text=item["name"],
-                width=180
-            )
-
-            name.pack(
+                text=item["name"]
+            ).pack(
                 side="left",
                 padx=10
             )
 
 
 
-            # MINUS BUTTON
-
-            minus = ctk.CTkButton(
+            ctk.CTkButton(
                 row,
                 text="-",
                 width=40,
                 command=lambda i=index:self.decrease_quantity(i)
-            )
-
-            minus.pack(
+            ).pack(
                 side="left"
             )
 
 
 
-            # QUANTITY
-
-            qty = ctk.CTkLabel(
+            ctk.CTkLabel(
                 row,
-                text=str(item["qty"]),
-                width=50,
-                font=("Arial",16,"bold")
-            )
-
-            qty.pack(
+                text=str(item["qty"])
+            ).pack(
                 side="left"
             )
 
 
 
-            # PLUS BUTTON
-
-            plus = ctk.CTkButton(
+            ctk.CTkButton(
                 row,
                 text="+",
                 width=40,
                 command=lambda i=index:self.increase_quantity(i)
-            )
-
-
-            plus.pack(
+            ).pack(
                 side="left"
             )
 
 
 
-            # PRICE
-
-            price = ctk.CTkLabel(
+            ctk.CTkLabel(
                 row,
-                text=f"${amount}",
-                width=100
-            )
-
-            price.pack(
+                text=f"${amount}"
+            ).pack(
                 side="right",
                 padx=20
+            )
+
+
+
+            ctk.CTkButton(
+                row,
+                text="Remove",
+                fg_color="red",
+                command=lambda i=index:self.remove_item(i)
+            ).pack(
+                side="right"
             )
 
 
@@ -398,9 +362,7 @@ class Sales(ctk.CTkFrame):
 
 
 
-
-
-    def remove_item(self, index):
+    def remove_item(self,index):
 
         self.cart.pop(index)
 
@@ -413,25 +375,21 @@ class Sales(ctk.CTkFrame):
         item = self.cart[index]
 
 
-        # STOCK CHECK
-
         if item["qty"] >= item["stock"]:
-
 
             messagebox.showwarning(
                 "Stock Limit",
-                f"Only {item['stock']} units available"
+                "Maximum available stock reached"
             )
 
             return
 
 
-
         item["qty"] += 1
 
-
         self.refresh_cart()
-    
+
+
 
     def decrease_quantity(self,index):
 
@@ -441,18 +399,24 @@ class Sales(ctk.CTkFrame):
         item["qty"] -= 1
 
 
-
-        # remove item if quantity becomes zero
-
         if item["qty"] <= 0:
 
             self.cart.pop(index)
 
 
+        self.refresh_cart()
+
+
+
+    def clear_cart(self):
+
+        self.cart.clear()
 
         self.refresh_cart()
 
 
+
+    # ================= CHECKOUT =================
 
 
     def checkout(self):
@@ -468,39 +432,12 @@ class Sales(ctk.CTkFrame):
 
 
 
-        # ---------------- STOCK VALIDATION ----------------
-
-        products = self.db.get_products()
-
-
-
-        for item in self.cart:
-
-            for product in products:
-
-                if product[0] == item["id"]:
-
-                    if item["qty"] > product[6]:
-
-                        messagebox.showerror(
-                            "Stock Error",
-                            f"{item['name']} does not have enough stock"
-                        )
-
-                        return
-
-
-
-            # ---------------- CALCULATE TOTAL ----------------
-
         total = sum(
             item["qty"] * item["price"]
             for item in self.cart
         )
 
 
-
-        # ---------------- CREATE SALE ----------------
 
         sale_id = self.db.create_sale(
 
@@ -514,87 +451,119 @@ class Sales(ctk.CTkFrame):
 
 
 
-        # ---------------- SAVE ITEMS + REDUCE STOCK ----------------
-
         for item in self.cart:
+
 
             self.db.add_sale_item(
 
                 sale_id,
+
                 item["id"],
+
                 item["qty"],
+
                 item["price"]
 
             )
 
 
 
-        # ---------------- GENERATE RECEIPT ----------------
-
-        self.generate_receipt(sale_id, total)
-
-
-
-        # ---------------- CLEAN UP ----------------
-
-        messagebox.showinfo(
-            "Success",
-            "Sale completed successfully"
+        self.generate_receipt(
+            sale_id,
+            total
         )
 
 
 
+        messagebox.showinfo(
+            "Success",
+            "Sale completed"
+        )
+
+
         self.cart.clear()
+
         self.refresh_cart()
 
-        self.customer.delete(0, "end")
-
-        
 
 
+    # ================= RECEIPT =================
 
 
-    def generate_receipt(self, sale_id, total):
+    def generate_receipt(
+        self,
+        sale_id,
+        total
+    ):
+
 
         if not os.path.exists("receipts"):
+
             os.makedirs("receipts")
 
-
-        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
         filename = f"receipts/receipt_{sale_id}.pdf"
 
-        c = canvas.Canvas(filename, pagesize=A4)
 
 
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(200, 800, "INVENTORY PRO - RECEIPT")
+        c = canvas.Canvas(
+            filename,
+            pagesize=A4
+        )
 
 
-        c.setFont("Helvetica", 12)
-        c.drawString(50, 770, f"Sale ID: {sale_id}")
-        c.drawString(50, 750, f"Customer: {self.customer.get()}")
-        c.drawString(50, 730, f"Date: {date}")
-        c.drawString(50, 710, f"Cashier: {__import__('auth.session').session.Session.current_user['name']}")
+
+        c.drawString(
+            200,
+            800,
+            "INVENTORY PRO RECEIPT"
+        )
 
 
-        y = 670
+        c.drawString(
+            50,
+            760,
+            f"Sale ID: {sale_id}"
+        )
 
-        c.drawString(50, y, "Items:")
-        y -= 20
+
+        c.drawString(
+            50,
+            740,
+            f"Customer: {self.customer.get()}"
+        )
+
+
+        c.drawString(
+            50,
+            720,
+            f"Date: {datetime.now()}"
+        )
+
+
+        y = 680
 
 
         for item in self.cart:
 
-            line = f"{item['name']} x {item['qty']}  = ${item['qty'] * item['price']}"
 
-            c.drawString(70, y, line)
+            c.drawString(
+                60,
+                y,
+                f"{item['name']} x {item['qty']} = {item['qty']*item['price']}"
+            )
 
             y -= 20
 
 
-        c.drawString(50, y-20, f"TOTAL: ${total}")
+
+        c.drawString(
+            50,
+            y-20,
+            f"TOTAL: {total}"
+        )
+
 
 
         c.save()

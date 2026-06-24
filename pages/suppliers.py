@@ -1,12 +1,14 @@
 import customtkinter as ctk
+
 from database.supplier_db import SupplierDB
+from tkinter import messagebox
 
 
 
 class Suppliers(ctk.CTkFrame):
 
 
-    def __init__(self,parent):
+    def __init__(self, parent):
 
         super().__init__(parent)
 
@@ -20,13 +22,15 @@ class Suppliers(ctk.CTkFrame):
 
 
 
+    # ================= UI =================
+
     def create_widgets(self):
 
 
         title = ctk.CTkLabel(
             self,
             text="Supplier Management",
-            font=("Arial",28,"bold")
+            font=("Arial", 28, "bold")
         )
 
 
@@ -52,7 +56,8 @@ class Suppliers(ctk.CTkFrame):
         )
 
         self.name.pack(
-            pady=5
+            pady=5,
+            fill="x"
         )
 
 
@@ -63,7 +68,8 @@ class Suppliers(ctk.CTkFrame):
         )
 
         self.phone.pack(
-            pady=5
+            pady=5,
+            fill="x"
         )
 
 
@@ -74,7 +80,8 @@ class Suppliers(ctk.CTkFrame):
         )
 
         self.email.pack(
-            pady=5
+            pady=5,
+            fill="x"
         )
 
 
@@ -85,7 +92,8 @@ class Suppliers(ctk.CTkFrame):
         )
 
         self.address.pack(
-            pady=5
+            pady=5,
+            fill="x"
         )
 
 
@@ -103,8 +111,12 @@ class Suppliers(ctk.CTkFrame):
 
 
 
+        # ================= TABLE =================
+
+
         self.table = ctk.CTkTextbox(
-            self
+            self,
+            font=("Arial", 14)
         )
 
 
@@ -117,28 +129,65 @@ class Suppliers(ctk.CTkFrame):
 
 
 
+    # ================= ADD SUPPLIER =================
+
 
     def add_supplier(self):
 
+
+        name = self.name.get().strip()
+
+        phone = self.phone.get().strip()
+
+        email = self.email.get().strip()
+
+        address = self.address.get().strip()
+
+
+
+        if not name:
+
+            messagebox.showerror(
+                "Error",
+                "Supplier name is required"
+            )
+
+            return
+
+
+
         self.db.add_supplier(
 
-            self.name.get(),
+            name,
 
-            self.phone.get(),
+            phone,
 
-            self.email.get(),
+            email,
 
-            self.address.get()
+            address
 
         )
 
+
+
+        messagebox.showinfo(
+            "Success",
+            "Supplier added successfully"
+        )
+
+
+
+        self.clear_form()
 
         self.load_suppliers()
 
 
 
+    # ================= LOAD SUPPLIERS =================
+
 
     def load_suppliers(self):
+
 
         self.table.delete(
             "1.0",
@@ -146,22 +195,55 @@ class Suppliers(ctk.CTkFrame):
         )
 
 
+
         suppliers = self.db.get_suppliers()
+
 
 
         for supplier in suppliers:
 
+
             self.table.insert(
+
                 "end",
 
                 f"""
-ID: {supplier[0]}
-Name: {supplier[1]}
-Phone: {supplier[2]}
-Email: {supplier[3]}
-Address: {supplier[4]}
+ID: {supplier["id"]}
+Name: {supplier["name"]}
+Phone: {supplier["phone"]}
+Email: {supplier["email"]}
+Address: {supplier["address"]}
+Created: {supplier["created_at"]}
 
-----------------------
+-----------------------------
 
 """
+
             )
+
+
+
+    # ================= CLEAR FORM =================
+
+
+    def clear_form(self):
+
+        self.name.delete(
+            0,
+            "end"
+        )
+
+        self.phone.delete(
+            0,
+            "end"
+        )
+
+        self.email.delete(
+            0,
+            "end"
+        )
+
+        self.address.delete(
+            0,
+            "end"
+        )

@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from database.db import Database
+from database.auth_db import AuthDB
 from tkinter import messagebox
 
 
@@ -9,7 +9,7 @@ class Signup(ctk.CTkFrame):
 
         super().__init__(parent)
 
-        self.db = Database()
+        self.db = AuthDB()
         self.on_success = on_success
         self.go_to_login = go_to_login
 

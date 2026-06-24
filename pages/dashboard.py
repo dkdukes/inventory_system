@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from database.db import Database
+from database.product_db import ProductDB
 
 
 class Dashboard(ctk.CTkFrame):
@@ -8,7 +8,7 @@ class Dashboard(ctk.CTkFrame):
 
         super().__init__(parent)
 
-        self.db = Database()
+        self.db = ProductDB()
 
         self.create_widgets()
 
@@ -24,8 +24,11 @@ class Dashboard(ctk.CTkFrame):
             font=("Arial", 30, "bold")
         )
 
-        title.pack(anchor="w", padx=20, pady=20)
-
+        title.pack(
+            anchor="w",
+            padx=20,
+            pady=20
+        )
 
 
         self.create_cards()
@@ -38,13 +41,31 @@ class Dashboard(ctk.CTkFrame):
     def map_product(self, p):
 
         return {
-            "id": p[0],
-            "name": p[1],
-            "category": p[2],
-            "supplier": p[3],
-            "buy_price": p[4],
-            "sell_price": p[5],
-            "quantity": p[6]
+            "id": p["id"],
+
+            "name": p["name"],
+
+            "category": p.get(
+                "category_name",
+                "N/A"
+            ),
+
+            "supplier": p.get(
+                "supplier_name",
+                "N/A"
+            ),
+
+            "buy_price": float(
+                p["buy_price"] or 0
+            ),
+
+            "sell_price": float(
+                p["sell_price"] or 0
+            ),
+
+            "quantity": int(
+                p["quantity"] or 0
+            )
         }
 
 
@@ -54,29 +75,38 @@ class Dashboard(ctk.CTkFrame):
     def create_cards(self):
 
         card_frame = ctk.CTkFrame(self)
-        card_frame.pack(fill="x", padx=20)
 
+        card_frame.pack(
+            fill="x",
+            padx=20
+        )
 
 
         products = self.db.get_products()
-        mapped = [self.map_product(p) for p in products]
+
+        mapped = [
+            self.map_product(p)
+            for p in products
+        ]
 
 
-
-        # METRICS
 
         total_products = len(mapped)
 
-        total_units = sum(p["quantity"] for p in mapped)
 
-        inventory_value = sum(
-            p["quantity"] * p["sell_price"]
+        total_units = sum(
+            p["quantity"]
             for p in mapped
         )
 
-        low_stock = len([
-            p for p in mapped if p["quantity"] <= 5
-        ])
+
+        inventory_value = sum(
+            p["quantity"] *
+            p["sell_price"]
+
+            for p in mapped
+        )
+
 
         total_sales = self.db.get_total_sales()
 
@@ -84,13 +114,25 @@ class Dashboard(ctk.CTkFrame):
 
         cards = [
 
-            ("Total Products", total_products),
+            (
+                "Total Products",
+                total_products
+            ),
 
-            ("Total Units", total_units),
+            (
+                "Total Units",
+                total_units
+            ),
 
-            ("Inventory Value", f"${inventory_value:,.2f}"),
+            (
+                "Inventory Value",
+                f"Ksh{inventory_value:,.2f}"
+            ),
 
-            ("Total Sales", f"${total_sales:,.2f}")
+            (
+                "Total Sales",
+                f"Ksh{total_sales:,.2f}"
+            )
 
         ]
 
@@ -98,24 +140,37 @@ class Dashboard(ctk.CTkFrame):
 
         for title, value in cards:
 
-            card = ctk.CTkFrame(card_frame, width=200, height=120)
 
-            card.pack(side="left", expand=True, fill="both", padx=10)
+            card = ctk.CTkFrame(
+                card_frame,
+                width=200,
+                height=120
+            )
+
+
+            card.pack(
+                side="left",
+                expand=True,
+                fill="both",
+                padx=10
+            )
 
 
 
             ctk.CTkLabel(
                 card,
                 text=title,
-                font=("Arial", 16)
-            ).pack(pady=15)
+                font=("Arial",16)
+            ).pack(
+                pady=15
+            )
 
 
 
             ctk.CTkLabel(
                 card,
-                text=value,
-                font=("Arial", 28, "bold")
+                text=str(value),
+                font=("Arial",28,"bold")
             ).pack()
 
 
@@ -124,73 +179,133 @@ class Dashboard(ctk.CTkFrame):
 
     def create_bottom_sections(self):
 
+
         bottom = ctk.CTkFrame(self)
-        bottom.pack(expand=True, fill="both", padx=20, pady=20)
+
+
+        bottom.pack(
+            expand=True,
+            fill="both",
+            padx=20,
+            pady=20
+        )
 
 
 
-        # SALES PANEL (future charts area)
+        # ================= SALES =================
 
         sales = ctk.CTkFrame(bottom)
 
-        sales.pack(side="left", expand=True, fill="both", padx=10)
+
+        sales.pack(
+            side="left",
+            expand=True,
+            fill="both",
+            padx=10
+        )
 
 
 
         ctk.CTkLabel(
             sales,
             text="Sales Overview",
-            font=("Arial", 20, "bold")
-        ).pack(pady=20)
+            font=("Arial",20,"bold")
+        ).pack(
+            pady=20
+        )
+
+
+
+        today_sales = self.db.get_today_sales()
 
 
 
         ctk.CTkLabel(
             sales,
-            text="Charts coming soon 📊"
+            text=f"Today's Sales: Ksh{today_sales:,.2f}",
+            font=("Arial",16)
         ).pack()
 
 
 
-        # LOW STOCK PANEL
+        ctk.CTkLabel(
+            sales,
+            text="Charts coming soon"
+        ).pack(
+            pady=20
+        )
+
+
+
+        # ================= LOW STOCK =================
+
 
         stock = ctk.CTkFrame(bottom)
 
-        stock.pack(side="right", expand=True, fill="both", padx=10)
+
+        stock.pack(
+            side="right",
+            expand=True,
+            fill="both",
+            padx=10
+        )
 
 
 
         ctk.CTkLabel(
             stock,
             text="Low Stock Alerts",
-            font=("Arial", 20, "bold")
-        ).pack(pady=20)
+            font=("Arial",20,"bold")
+        ).pack(
+            pady=20
+        )
 
 
 
         products = self.db.get_products()
-        mapped = [self.map_product(p) for p in products]
+
+
+        mapped = [
+            self.map_product(p)
+            for p in products
+        ]
 
 
 
         low_stock_items = [
-            p for p in mapped if p["quantity"] <= 5
+
+            p for p in mapped
+
+            if p["quantity"] <= 5
+
         ]
 
 
 
         if not low_stock_items:
 
+
             ctk.CTkLabel(
                 stock,
-                text="No low stock items 👍"
+                text="No low stock items"
             ).pack()
+
+
 
         else:
 
+
             for p in low_stock_items:
+
 
                 ctk.CTkLabel(
                     stock,
-                    text=f"{p['name']} - {p['quantity']} left"
-                ).pack(pady=5)
+
+                    text=(
+                        f"{p['name']} "
+                        f"- {p['quantity']} left"
+                    )
+
+                ).pack(
+                    pady=5
+                )
