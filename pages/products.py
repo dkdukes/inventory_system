@@ -80,11 +80,12 @@ class Products(ctk.CTkFrame):
 
         # CATEGORY
 
-        self.category_var = ctk.StringVar()
+        self.category_var = ctk.StringVar(value="Select Category")
 
         self.category_menu = ctk.CTkOptionMenu(
             form,
-            variable=self.category_var
+            variable=self.category_var,
+            values=["Select Category"]
         )
 
         self.category_menu.pack(
@@ -93,13 +94,15 @@ class Products(ctk.CTkFrame):
         )
 
 
+
         # SUPPLIER
 
-        self.supplier_var = ctk.StringVar()
+        self.supplier_var = ctk.StringVar(value="Select Supplier")
 
         self.supplier_menu = ctk.CTkOptionMenu(
             form,
-            variable=self.supplier_var
+            variable=self.supplier_var,
+            values=["Select Supplier"]
         )
 
         self.supplier_menu.pack(
@@ -177,6 +180,7 @@ class Products(ctk.CTkFrame):
         suppliers = self.supplier_db.get_suppliers()
 
 
+        # Store IDs for database insertion
         self.category_map = {
 
             category["name"]: category["id"]
@@ -195,13 +199,34 @@ class Products(ctk.CTkFrame):
         }
 
 
+        # Add placeholders
+        category_values = [
+            "Select Category"
+        ] + list(self.category_map.keys())
+
+
+        supplier_values = [
+            "Select Supplier"
+        ] + list(self.supplier_map.keys())
+
+
+        # Update menus
         self.category_menu.configure(
-            values=list(self.category_map.keys())
+            values=category_values
+        )
+
+        self.supplier_menu.configure(
+            values=supplier_values
         )
 
 
-        self.supplier_menu.configure(
-            values=list(self.supplier_map.keys())
+        # Set default display values
+        self.category_menu.set(
+            "Select Category"
+        )
+
+        self.supplier_menu.set(
+            "Select Supplier"
         )
 
 
@@ -215,41 +240,66 @@ class Products(ctk.CTkFrame):
             return
 
 
-        self.db.add_product(
+        # Validate category
+        if self.category_var.get() == "Select Category":
 
-            self.name.get(),
-
-            self.category_map[
-                self.category_var.get()
-            ],
-
-            self.supplier_map[
-                self.supplier_var.get()
-            ],
-
-            float(
-                self.buy_price.get()
-            ),
-
-            float(
-                self.sell_price.get()
-            ),
-
-            int(
-                self.quantity.get()
-            ),
-
-            self.serial.get(),
-
-            Session.current_user["id"]
-
-        )
+            print("Please select a category")
+            return
 
 
-        self.clear_form()
+        # Validate supplier
+        if self.supplier_var.get() == "Select Supplier":
 
-        self.load_products()
+            print("Please select a supplier")
+            return
 
+
+        try:
+
+            self.db.add_product(
+
+                self.name.get(),
+
+                self.category_map[
+                    self.category_var.get()
+                ],
+
+                self.supplier_map[
+                    self.supplier_var.get()
+                ],
+
+                float(
+                    self.buy_price.get()
+                ),
+
+                float(
+                    self.sell_price.get()
+                ),
+
+                int(
+                    self.quantity.get()
+                ),
+
+                self.serial.get(),
+
+                Session.current_user["id"]
+
+            )
+
+
+            self.clear_form()
+
+            self.load_products()
+
+
+        except ValueError:
+
+            print("Please enter valid numbers for price and quantity")
+
+
+        except Exception as e:
+
+            print("Error adding product:", e)
 
 
     # ================= LOAD PRODUCTS =================
@@ -315,25 +365,25 @@ class Products(ctk.CTkFrame):
                 )
 
 
-            delete_btn = ctk.CTkButton(
+            # delete_btn = ctk.CTkButton(
 
-                row,
+            #     row,
 
-                text="❌",
+            #     text="❌",
 
-                width=40,
+            #     width=40,
 
-                fg_color="red",
+            #     fg_color="white",
 
-                command=lambda pid=product["id"]:
-                    self.delete_product(pid)
+            #     command=lambda pid=product["id"]:
+            #         self.delete_product(pid)
 
-            )
+            # )
 
-            delete_btn.pack(
-                side="right",
-                padx=5
-            )
+            # delete_btn.pack(
+            #     side="right",
+            #     padx=5
+            # )
 
 
 

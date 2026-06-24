@@ -1,20 +1,54 @@
 import sqlite3
 
 
+import sqlite3
+
+
 class Database:
+
+    _instance = None
+
+
+    def __new__(cls):
+
+        if cls._instance is None:
+            cls._instance = super(Database, cls).__new__(cls)
+
+        return cls._instance
+
+
 
     def __init__(self):
 
-        self.conn = sqlite3.connect("inventory.db")
+        # prevent reconnecting every time Database() is called
+        if hasattr(self, "conn"):
+            return
 
-        self.conn.execute(
-            "PRAGMA foreign_keys = ON"
+
+        self.conn = sqlite3.connect(
+            "inventory.db",
+            timeout=10
         )
+
 
         # return rows as dictionaries
         self.conn.row_factory = sqlite3.Row
 
+
+        # enable foreign keys
+        self.conn.execute(
+            "PRAGMA foreign_keys = ON"
+        )
+
+
+        # improve concurrent access
+        self.conn.execute(
+            "PRAGMA journal_mode=WAL"
+        )
+
+
         self.cursor = self.conn.cursor()
+
 
         self.create_tables()
 
@@ -24,12 +58,20 @@ class Database:
 
     def execute(self, query, params=()):
 
-        self.cursor.execute(
-            query,
-            params
-        )
+        try:
 
-        self.conn.commit()
+            self.cursor.execute(
+                query,
+                params
+            )
+
+            self.conn.commit()
+
+
+        except sqlite3.Error as e:
+
+            self.conn.rollback()
+            raise e
 
 
 
@@ -43,6 +85,7 @@ class Database:
         )
 
         rows = self.cursor.fetchall()
+
 
         return [
             dict(row)
@@ -62,7 +105,20 @@ class Database:
 
         row = self.cursor.fetchone()
 
+
         return dict(row) if row else None
+
+
+
+    # ================= CLOSE =================
+
+    def close(self):
+
+        if self.conn:
+
+            self.conn.close()
+
+            self.conn = None
 
 
 

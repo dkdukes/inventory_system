@@ -128,7 +128,7 @@ class Sales(ctk.CTkFrame):
 
         self.total_label = ctk.CTkLabel(
             self,
-            text="Total: $0",
+            text="Total: Ksh0",
             font=("Arial",22,"bold")
         )
 
@@ -337,7 +337,7 @@ class Sales(ctk.CTkFrame):
 
             ctk.CTkLabel(
                 row,
-                text=f"${amount}"
+                text=f"Ksh{amount}"
             ).pack(
                 side="right",
                 padx=20
@@ -357,7 +357,7 @@ class Sales(ctk.CTkFrame):
 
 
         self.total_label.configure(
-            text=f"Total: ${total}"
+            text=f"Total: Ksh{total}"
         )
 
 

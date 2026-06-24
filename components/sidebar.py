@@ -19,15 +19,39 @@ class Sidebar(ctk.CTkFrame):
     def create_widgets(self):
 
         # ---------------- LOGO ----------------
-        logo = ctk.CTkLabel(
+        logo_frame = ctk.CTkFrame(
             self,
-            text="INVENTORY PRO",
-            font=("Arial", 22, "bold")
+            fg_color="transparent"
         )
 
-        logo.pack(pady=30)
+        logo_frame.pack(
+            pady=12
+        )
 
 
+        
+
+        logo = ctk.CTkLabel(
+            logo_frame,
+            text="SHOP\nMANAGER",
+            font=("Arial", 24, "bold"),
+            justify="center"
+        )
+
+        logo.pack()
+        
+
+        version = ctk.CTkLabel(
+            logo_frame,
+            text="v1.0 ERP",
+            font=("Arial", 11)
+        )
+
+        version.pack(
+            pady=5
+        )
+
+    
 
         # ---------------- MENU ----------------
         menu = [
